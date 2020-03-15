@@ -34,13 +34,13 @@ func (i *API) steamAppsPath() string {
 func (i *API) LoadManifest(filename string) (game Game, err error) {
 	// Get maps of ACF keys to fields, and fields to types
 	fields, _ := reflections.Fields(game)
-	fieldMap := make(map[string]reflect.Kind, len(fields))
+	typesMap := make(map[string]reflect.Kind, len(fields))
 	tagsMap := make(map[string]string, len(fields))
 	var field, tag string
 	for _, field = range fields {
 		tag, _ = reflections.GetFieldTag(game, field, "acf")
 		tagsMap[tag] = field
-		fieldMap[field], _ = reflections.GetFieldKind(game, field)
+		typesMap[field], _ = reflections.GetFieldKind(game, field)
 	}
 
 	// Read the acf, parse the lines out
@@ -52,8 +52,7 @@ func (i *API) LoadManifest(filename string) (game Game, err error) {
 	var key string
 	var char byte
 	var builder strings.Builder
-	var group int
-	inQuotes := false
+	var inQuotes bool = false
 	for _, char = range data {
 		switch char {
 		case '"':
@@ -65,12 +64,11 @@ func (i *API) LoadManifest(filename string) (game Game, err error) {
 
 				// First pair of quotes contains the key
 				// Map the acf tag to the actual struct field name
-				if fieldName, ok := tagsMap[value]; group == 0 && ok {
+				if fieldName, ok := tagsMap[value]; ok {
 					key = fieldName
-					group++
 
 					// The second is the value
-				} else if kind, ok := fieldMap[key]; group == 1 && ok {
+				} else if kind, ok := typesMap[key]; ok {
 					// Could be int or string - make the type conversion
 					if kind == reflect.Int {
 						var intval int64
@@ -82,7 +80,6 @@ func (i *API) LoadManifest(filename string) (game Game, err error) {
 					} else {
 						reflections.SetField(&game, key, value)
 					}
-					group++
 				}
 			}
 			builder.Reset()
@@ -90,7 +87,7 @@ func (i *API) LoadManifest(filename string) (game Game, err error) {
 		case '\n':
 			// Reset on new lines
 			inQuotes = false
-			group = 0
+			key = ""
 			builder.Reset()
 
 		default:
