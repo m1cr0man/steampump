@@ -32,6 +32,10 @@ func (i *API) SteamAppsPath() string {
 	return path.Join(i.steamPath, "steamapps")
 }
 
+func (i *API) GetGames() []Game {
+	return i.games
+}
+
 func (i *API) GetGame(appid int) Game {
 	for _, game := range i.games {
 		if game.AppID == appid {
