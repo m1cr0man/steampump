@@ -1,6 +1,7 @@
 package steam
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -27,8 +28,25 @@ func (i *API) SetSteamPath(steamPath string) (err error) {
 	return
 }
 
-func (i *API) steamAppsPath() string {
+func (i *API) SteamAppsPath() string {
 	return path.Join(i.steamPath, "steamapps")
+}
+
+func (i *API) GetGame(appid string) Game {
+	for _, game := range i.games {
+		if game.AppID == appid {
+			return game
+		}
+	}
+}
+
+func (i *API) GetGamePath(appid string) string {
+	game := i.GetGame(appid)
+	return path.Join(i.SteamAppsPath(), "common", game.InstallDir)
+}
+
+func (i *API) GetGameManifestPath(appid string) string {
+	return path.Join(i.SteamAppsPath(), fmt.Sprintf("appmanifest_%d.acf", appid))
 }
 
 func (i *API) LoadManifest(filename string) (game Game, err error) {
@@ -101,14 +119,14 @@ func (i *API) LoadManifest(filename string) (game Game, err error) {
 func (i *API) LoadGames() (err error) {
 	var games []Game
 	var game Game
-	files, err := ioutil.ReadDir(i.steamAppsPath())
+	files, err := ioutil.ReadDir(i.SteamAppsPath())
 	if err != nil {
 		return
 	}
 
 	for _, file := range files {
 		if strings.Contains(file.Name(), ".acf") && !file.IsDir() {
-			game, err = i.LoadManifest(path.Join(i.steamAppsPath(), file.Name()))
+			game, err = i.LoadManifest(path.Join(i.SteamAppsPath(), file.Name()))
 			if err != nil {
 				return
 			}
