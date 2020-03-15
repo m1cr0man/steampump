@@ -4,14 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
 func (s *Server) ServeGame(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	game := s.steam.GetGame(vars["appid"])
+	appID, err := strconv.Atoi(vars["appid"])
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	game := s.steam.GetGame(appID)
 	jsonData, err := json.Marshal(game)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -24,12 +30,24 @@ func (s *Server) ServeGame(res http.ResponseWriter, req *http.Request) {
 
 func (s *Server) ServeGameManifest(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	fullPath := s.steam.GetGameManifestPath(vars["appid"])
+	appID, err := strconv.Atoi(vars["appid"])
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fullPath := s.steam.GetGameManifestPath(appID)
 	s.serveFile(res, req, fullPath)
 }
 
 func (s *Server) ServeGameContent(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	fullPath := path.Join(s.steam.GetGamePath(vars["appid"]), vars["filepath"])
+	appID, err := strconv.Atoi(vars["appid"])
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fullPath := path.Join(s.steam.GetGamePath(appID), vars["filepath"])
 	s.serveFile(res, req, fullPath)
 }

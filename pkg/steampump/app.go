@@ -1,9 +1,8 @@
 package steampump
 
 import (
-	"context"
-	"fmt"
-	"net/http"
+	"encoding/json"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/m1cr0man/steampump/pkg/steam"
@@ -13,7 +12,7 @@ const AppPort = 9771
 
 type App struct {
 	ConfigDir string
-	server    *http.Server
+	Config    *Config
 	steam     *steam.API
 }
 
@@ -21,18 +20,36 @@ func (a *App) configFile() string {
 	return filepath.Join(a.ConfigDir, "config.json")
 }
 
-func (a *App) RunServer() {
-	a.server.ListenAndServe()
+func (a *App) LoadConfig() (err error) {
+	var data []byte
+	data, err = ioutil.ReadFile(a.configFile())
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(data, a.Config)
+	return
 }
 
-func (a *App) StopServer() error {
-	return a.server.Shutdown(context.Background())
+func (a *App) SaveConfig(config Config) (err error) {
+	var data []byte
+	data, err = json.Marshal(config)
+	if err != nil {
+		return
+	}
+
+	err = ioutil.WriteFile(a.configFile(), data, 0644)
+	if err != nil {
+		return
+	}
+	a.Config = &config
+	return
 }
 
 func NewApp(configDir string, steam *steam.API) *App {
 	return &App{
 		ConfigDir: configDir,
-		server:    &http.Server{Addr: fmt.Sprintf(":%d", AppPort)},
+		Config:    &Config{},
 		steam:     steam,
 	}
 }

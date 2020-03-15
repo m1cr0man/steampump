@@ -1,6 +1,7 @@
 package steampump
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -9,7 +10,10 @@ import (
 )
 
 type Server struct {
-	steam *steam.API
+	app    *App
+	steam  *steam.API
+	Router *mux.Router
+	Port   int
 }
 
 func (s *Server) serveFile(res http.ResponseWriter, req *http.Request, fullPath string) {
@@ -20,9 +24,21 @@ func (s *Server) serveFile(res http.ResponseWriter, req *http.Request, fullPath 
 	http.ServeFile(res, req, fullPath)
 }
 
-func NewServer(steam *steam.API) {
-	s := Server{steam: steam}
+func (s *Server) Serve() {
+	fmt.Printf("Now listening on :%d", s.Port)
+	http.ListenAndServe(fmt.Sprintf(":%d", s.Port), s.Router)
+}
+
+func NewServer(app *App, steam *steam.API) *Server {
 	r := mux.NewRouter()
+	s := Server{app: app, steam: steam, Router: r, Port: 9771}
+
+	r.HandleFunc("/app/config", s.ServeConfig).
+		Name("appconfig").
+		Methods(http.MethodGet)
+	r.HandleFunc("/app/config", s.WriteConfig).
+		Name("appconfig-write").
+		Methods(http.MethodPut)
 
 	r.HandleFunc("/steamapp/{appid:[0-9]+}/?", s.ServeGame).
 		Name("steamapp").
@@ -33,4 +49,6 @@ func NewServer(steam *steam.API) {
 	r.HandleFunc("/steamapp/{appid:[0-9]+}/content/{filepath:.*}", s.ServeGameContent).
 		Name("steamapp-content").
 		Methods(http.MethodGet)
+
+	return &s
 }

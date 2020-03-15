@@ -21,8 +21,32 @@ func main() {
 	}
 
 	steam := steam.NewAPI()
-	steam.SetSteamPath("D:\\program files (x86)\\steam")
-	steam.LoadGames()
 	app := steampump.NewApp(configDir, steam)
-	app.RunServer()
+	err = app.LoadConfig()
+
+	if err != nil && !os.IsNotExist(err) {
+		fmt.Println("Failed to load config: ", err)
+		os.Exit(2)
+		return
+	}
+
+	err = steam.SetSteamPath(app.Config.SteamPath)
+	if err != nil {
+		fmt.Println("Failed to set Steam path: ", err)
+
+		if !os.IsNotExist(err) {
+			os.Exit(2)
+			return
+		}
+	} else {
+		err = steam.LoadGames()
+		if err != nil {
+			fmt.Println("Failed to load Steam games: ", err)
+			os.Exit(2)
+			return
+		}
+	}
+
+	server := steampump.NewServer(app, steam)
+	server.Serve()
 }

@@ -32,20 +32,21 @@ func (i *API) SteamAppsPath() string {
 	return path.Join(i.steamPath, "steamapps")
 }
 
-func (i *API) GetGame(appid string) Game {
+func (i *API) GetGame(appid int) Game {
 	for _, game := range i.games {
 		if game.AppID == appid {
 			return game
 		}
 	}
+	return Game{}
 }
 
-func (i *API) GetGamePath(appid string) string {
+func (i *API) GetGamePath(appid int) string {
 	game := i.GetGame(appid)
 	return path.Join(i.SteamAppsPath(), "common", game.InstallDir)
 }
 
-func (i *API) GetGameManifestPath(appid string) string {
+func (i *API) GetGameManifestPath(appid int) string {
 	return path.Join(i.SteamAppsPath(), fmt.Sprintf("appmanifest_%d.acf", appid))
 }
 
