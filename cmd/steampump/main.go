@@ -5,7 +5,9 @@ import (
 	"os"
 
 	"github.com/kirsle/configdir"
+	"github.com/m1cr0man/steampump/pkg/server"
 	"github.com/m1cr0man/steampump/pkg/steam"
+	"github.com/m1cr0man/steampump/pkg/steammesh"
 	"github.com/m1cr0man/steampump/pkg/steampump"
 )
 
@@ -21,32 +23,21 @@ func main() {
 	}
 
 	steam := steam.NewAPI()
-	app := steampump.NewApp(configDir, steam)
-	err = app.LoadConfig()
+	mesh := steammesh.NewAPI()
+	app := steampump.NewApp(configDir, steam, mesh)
 
-	if err != nil && !os.IsNotExist(err) {
+	if err = app.LoadConfig(); err != nil && !os.IsNotExist(err) {
 		fmt.Println("Failed to load config: ", err)
 		os.Exit(2)
 		return
 	}
 
-	err = steam.SetSteamPath(app.Config.SteamPath)
-	if err != nil {
-		fmt.Println("Failed to set Steam path: ", err)
-
-		if !os.IsNotExist(err) {
-			os.Exit(2)
-			return
-		}
-	} else {
-		err = steam.LoadGames()
-		if err != nil {
-			fmt.Println("Failed to load Steam games: ", err)
-			os.Exit(2)
-			return
-		}
+	if err = steam.LoadGames(); err != nil && app.GetConfig().Steam.SteamPath != "" {
+		fmt.Println("Failed to load Steam games: ", err)
+		os.Exit(2)
+		return
 	}
 
-	server := steampump.NewServer(app, steam)
+	server := server.NewServer(app, mesh, steam)
 	server.Serve()
 }

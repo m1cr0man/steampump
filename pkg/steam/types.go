@@ -13,3 +13,7 @@ type Game struct {
 	BytesDownloaded    int    `acf:"BytesDownloaded" json:"bytesdownloaded"`
 	AutoUpdateBehavior int    `acf:"AutoUpdateBehavior" json:"autoupdatebehavior"`
 }
+
+type Config struct {
+	SteamPath string
+}

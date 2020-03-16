@@ -13,23 +13,27 @@ import (
 )
 
 type API struct {
-	steamPath string
-	games     []Game
+	config Config
+	games  []Game
 }
 
-func (i *API) SetSteamPath(steamPath string) (err error) {
-	_, err = os.Stat(steamPath)
-
-	if err != nil {
+func (i *API) SetConfig(config Config) (err error) {
+	if _, err = os.Stat(config.SteamPath); err != nil {
 		return
 	}
 
-	i.steamPath = steamPath
+	// Refresh games, revert if it fails
+	oldConfig := i.config
+	i.config = config
+	if err = i.LoadGames(); err != nil {
+		i.config = oldConfig
+	}
+
 	return
 }
 
 func (i *API) SteamAppsPath() string {
-	return path.Join(i.steamPath, "steamapps")
+	return path.Join(i.config.SteamPath, "steamapps")
 }
 
 func (i *API) GetGames() []Game {
@@ -145,6 +149,9 @@ func (i *API) LoadGames() (err error) {
 
 func NewAPI() *API {
 	return &API{
+		config: Config{
+			SteamPath: "",
+		},
 		games: []Game{},
 	}
 }

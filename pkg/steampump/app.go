@@ -6,18 +6,18 @@ import (
 	"path/filepath"
 
 	"github.com/m1cr0man/steampump/pkg/steam"
+	"github.com/m1cr0man/steampump/pkg/steammesh"
 )
 
-const AppPort = 9771
-
 type App struct {
-	ConfigDir string
-	Config    *Config
+	configDir string
+	config    Config
 	steam     *steam.API
+	mesh      *steammesh.API
 }
 
 func (a *App) configFile() string {
-	return filepath.Join(a.ConfigDir, "config.json")
+	return filepath.Join(a.configDir, "config.json")
 }
 
 func (a *App) LoadConfig() (err error) {
@@ -27,29 +27,55 @@ func (a *App) LoadConfig() (err error) {
 		return
 	}
 
-	err = json.Unmarshal(data, a.Config)
+	newConfig := a.config
+	if err = json.Unmarshal(data, &newConfig); err != nil {
+		return
+	}
+
+	err = a.SetConfig(newConfig)
 	return
 }
 
-func (a *App) SaveConfig(config Config) (err error) {
+func (a *App) SetConfig(config Config) (err error) {
+
+	if err = a.steam.SetConfig(config.Steam); err != nil {
+		return
+	}
+
+	if err = a.mesh.SetConfig(config.Mesh); err != nil {
+		// Revert steam config
+		a.steam.SetConfig(a.config.Steam)
+		return
+	}
+
 	var data []byte
-	data, err = json.Marshal(config)
-	if err != nil {
+	if data, err = json.Marshal(config); err != nil {
+		// Revert others
+		a.mesh.SetConfig(a.config.Mesh)
+		a.steam.SetConfig(a.config.Steam)
 		return
 	}
 
-	err = ioutil.WriteFile(a.configFile(), data, 0644)
-	if err != nil {
+	if err = ioutil.WriteFile(a.configFile(), data, 0644); err != nil {
+		// Revert others
+		a.mesh.SetConfig(a.config.Mesh)
+		a.steam.SetConfig(a.config.Steam)
 		return
 	}
-	a.Config = &config
+
+	a.config = config
 	return
 }
 
-func NewApp(configDir string, steam *steam.API) *App {
+func (a *App) GetConfig() Config {
+	return a.config
+}
+
+func NewApp(configDir string, steamapi *steam.API, mesh *steammesh.API) *App {
 	return &App{
-		ConfigDir: configDir,
-		Config:    &Config{},
-		steam:     steam,
+		configDir: configDir,
+		config:    Config{},
+		steam:     steamapi,
+		mesh:      mesh,
 	}
 }
