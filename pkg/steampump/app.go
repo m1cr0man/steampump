@@ -14,6 +14,7 @@ type App struct {
 	config    Config
 	steam     *steam.API
 	mesh      *steammesh.API
+	taskQueue WaitableTaskQueue
 }
 
 func (a *App) configFile() string {
@@ -71,11 +72,30 @@ func (a *App) GetConfig() Config {
 	return a.config
 }
 
+func (a *App) GetTasks() []*Task {
+	return a.taskQueue.List()
+}
+
+func (a *App) RegisterTask(title, info string) *Task {
+	task := NewTask(title, info)
+	a.taskQueue.Put(task)
+	return task
+}
+
+func (a *App) RunTasks() {
+	for {
+		task := a.taskQueue.Get()
+		task.Gate.Broadcast()
+		task.Gate.Wait()
+	}
+}
+
 func NewApp(configDir string, steamapi *steam.API, mesh *steammesh.API) *App {
 	return &App{
 		configDir: configDir,
 		config:    Config{},
 		steam:     steamapi,
 		mesh:      mesh,
+		taskQueue: WaitableTaskQueue{},
 	}
 }
