@@ -1,0 +1,26 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:all"
+    ],
+    "jsRules": {},
+    "rules": {
+        "semicolon": [true, "never"],
+        "indent": [true, "spaces", 2],
+        "max-classes-per-file": false,
+        "quotemark": [true, "double", "jsx-double", "avoid-template"],
+        "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
+        "no-import-side-effect": [true, {"ignore-module": "\\.(html|css|svg)$"}],
+        "no-non-null-assertion": false,
+        "newline-per-chained-call": false,
+        "no-magic-numbers": false,
+        "no-inferrable-types": false,
+        "typedef": [true, "call-signature", "parameter", "property-declaration", "variable-declaration", "member-variable-declaration"],
+        "no-submodule-imports": false,
+        "no-parameter-properties": false,
+        "completed-docs": false,
+        "no-any": false,
+        "no-console": false
+    },
+    "rulesDirectory": []
+}

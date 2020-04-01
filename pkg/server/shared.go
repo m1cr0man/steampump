@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/m1cr0man/steampump/pkg/steammesh"
 )
 
 func serveJSON(res http.ResponseWriter, data interface{}) {
@@ -33,20 +35,18 @@ func checkModified(req *http.Request, modtime time.Time) bool {
 }
 
 func sendDirJSON(res http.ResponseWriter, dirpath string) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-
 	files, _ := ioutil.ReadDir(dirpath)
-
-	fileJSON := make([]FileInfo, len(files))
-
+	fileJSON := make([]steammesh.TransferItem, len(files))
 	for i, file := range files {
-		fileJSON[i] = FileInfo{
-			Name:  file.Name(),
-			Dir:   file.IsDir(),
+		fileJSON[i] = steammesh.TransferItem{
+			Path:  file.Name(),
+			Mode:  file.Mode(),
 			Mtime: file.ModTime(),
+			Size:  file.Size(),
 		}
 	}
 
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	err := json.NewEncoder(res).Encode(fileJSON)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -65,7 +65,7 @@ func serveFile(res http.ResponseWriter, req *http.Request, fullPath string) {
 	}
 
 	// Override ServeFile for application/json requests to send better dir info
-	if stat.IsDir() && req.Header.Get("Content-Type") == "application/json" {
+	if stat.IsDir() && (req.Header.Get("Content-Type") == "application/json" || req.Header.Get("Accept") == "application/json") {
 
 		// Check modified date correctly
 		mtime := stat.ModTime()

@@ -7,4 +7,4 @@ generate:
 
 .PHONY: build
 build:
-	go build -o steampunk cmd/steampunk/main.go
+	go build -o steampump.exe cmd/steampunk/main.go

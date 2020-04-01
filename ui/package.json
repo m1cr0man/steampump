@@ -1,0 +1,29 @@
+{
+  "name": "steampump-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/jest": "25.1.4",
+    "@types/node": "13.9.5",
+    "solid-js": "^0.17.1",
+    "solid-scripts": "0.0.30",
+    "pretty-bytes": "^5.3.0",
+    "typescript": "3.8.3"
+  },
+  "devDependencies": {
+    "tslint": "6.1.0"
+  },
+  "scripts": {
+    "start": "solid-scripts start",
+    "build": "solid-scripts build",
+    "test": "solid-scripts test",
+    "check-types": "tsc"
+  },
+  "browserslist": [
+    "Chrome 74",
+    "Firefox 63",
+    "Safari 11",
+    "Edge 17",
+    "Node 10"
+  ]
+}

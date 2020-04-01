@@ -28,11 +28,39 @@ func (s *Server) Serve() {
 	http.ListenAndServe(fmt.Sprintf(":%d", s.config.Port), s.router)
 }
 
+func SetCorsHeaders(res http.ResponseWriter) {
+	res.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+	res.Header().Add("Access-Control-Allow-Headers", "Accept")
+	res.Header().Add("Access-Control-Allow-Headers", "X-Peer")
+	// TODO dev mode option
+	res.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("http://localhost:%d", 3000))
+	// Needed for caching
+	res.Header().Set("Vary", "Origin")
+}
+
+func CorsHandler(res http.ResponseWriter, req *http.Request) {
+	SetCorsHeaders(res)
+	res.WriteHeader(http.StatusNoContent)
+	return
+}
+
+func CorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		SetCorsHeaders(res)
+		if req.Method == http.MethodOptions {
+			res.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(res, req)
+	})
+}
+
 func NewServer(app *steampump.App, mesh *steammesh.API, steam *steam.API) *Server {
 	r := mux.NewRouter()
 	NewAppHandler(app).RegisterRoutes(r, "app")
-	NewMeshHandler(mesh).RegisterRoutes(r, "mesh")
+	NewMeshHandler(mesh, steam).RegisterRoutes(r, "mesh")
 	NewGameHandler(steam).RegisterRoutes(r, "games")
+	r.Use(CorsMiddleware)
 
 	s := Server{
 		app:    app,
