@@ -9,14 +9,37 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
 
+var copyLock sync.Mutex = sync.Mutex{}
+
+// CopierStatus Indicates the status of a GameCopier operation
+type CopierStatus string
+
+const (
+	// StatusQueued Copy is queued to run when possible
+	StatusQueued CopierStatus = "Queued"
+	// StatusRunning Copy is running
+	StatusRunning = "Running"
+	// StatusCalculating Copy is running but is still counting files which must be copied
+	StatusCalculating = "Calculating"
+	// StatusSuccessful Copy has finished and completed successfully
+	StatusSuccessful = "Successful"
+	// StatusFailed Copy has finished and failed
+	StatusFailed = "Failed"
+)
+
+// GameCopier operation. Copies games between a peer and the local host
 type GameCopier struct {
-	Running bool    `json:"running"`
-	AppID   int     `json:"appid"`
-	PeerURL url.URL `json:"peer"`
-	Dest    string  `json:"dest"`
+	Status     CopierStatus `json:"status"`
+	AppID      int          `json:"appid"`
+	BytesDone  int64        `json:"bytes_done"`
+	BytesTotal int64        `json:"bytes_total"`
+	Files      int          `json:"files"`
+	PeerURL    url.URL      `json:"peer"`
+	Dest       string       `json:"dest"`
 }
 
 func (g *GameCopier) getPaths(remoteURL *url.URL, item *SyncItem) (string, *url.URL) {
@@ -26,6 +49,7 @@ func (g *GameCopier) getPaths(remoteURL *url.URL, item *SyncItem) (string, *url.
 	return localPath, remotePath
 }
 
+// DiffDirectory Get the difference between a remote path and local directory
 func (g *GameCopier) DiffDirectory(remoteURL *url.URL, item *SyncItem) (items []*SyncItem, err error) {
 	localPath, remotePath := g.getPaths(remoteURL, item)
 	req, _ := http.NewRequest(http.MethodGet, remotePath.String(), nil)
@@ -86,12 +110,15 @@ func (g *GameCopier) DiffDirectory(remoteURL *url.URL, item *SyncItem) (items []
 				TransferItem: ritem,
 				Action:       ActionWrite,
 			})
+			g.BytesTotal += ritem.Size
+			g.Files++
 		}
 	}
 
 	return
 }
 
+// DownloadItem downloads a file from a HTTP endpoint
 func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error) {
 	localPath, remotePath := g.getPaths(remoteURL, item)
 	fd, err := os.Create(localPath)
@@ -118,6 +145,7 @@ func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error
 		if err != nil {
 			return
 		}
+		g.BytesDone += int64(n)
 
 		if readerr != nil && readerr != io.EOF {
 			return readerr
@@ -128,7 +156,11 @@ func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error
 	return
 }
 
+// CopyGameFrom Start copying the game using the pre configured parameters
 func (g *GameCopier) CopyGameFrom() (err error) {
+	g.Status = StatusRunning
+	fmt.Printf("Starting copy: %d from %s to %s\n", g.AppID, g.PeerURL.String(), g.Dest)
+
 	relPath, _ := url.Parse(fmt.Sprintf("games/%d/content/", g.AppID))
 	remoteURL := g.PeerURL.ResolveReference(relPath)
 
@@ -160,6 +192,7 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 			// Directory? create it and sync
 			if item.Mode.IsDir() {
 				if err = os.MkdirAll(localPath, item.Mode); err != nil {
+					g.Status = StatusFailed
 					return
 				}
 				newItems, err = g.DiffDirectory(remoteURL, item)
@@ -171,6 +204,7 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 			}
 
 			if err != nil {
+				g.Status = StatusFailed
 				return
 			}
 			err = os.Chtimes(localPath, item.Mtime, item.Mtime)
@@ -180,18 +214,21 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 		}
 
 		if err != nil {
+			g.Status = StatusFailed
 			return
 		}
 	}
 
+	g.Status = StatusSuccessful
 	return
 }
 
+// StartCopy wait for locks and start copying the game
 func (g *GameCopier) StartCopy() {
-	fmt.Printf("Starting copy: %d from %s to %s\n", g.AppID, g.PeerURL.String(), g.Dest)
-	g.Running = true
+	g.Status = StatusQueued
+	copyLock.Lock()
 	err := g.CopyGameFrom()
-	g.Running = false
+	copyLock.Unlock()
 
 	if err != nil {
 		fmt.Println("Copy ", g.AppID, " failed with error: ", err)

@@ -3,3 +3,4 @@ config.go
 .idea
 *.iml
 /bgur
+hidden/
