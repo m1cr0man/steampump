@@ -34,7 +34,7 @@ function getGameStatus(game: SteamGame | undefined, games: SteamGame[]): string 
 }
 
 export function Game({games}: {games: SteamGame[]}): JSX.Element {
-  const [state, {getPeers}] = useContext(steamPumpContext)
+  const [_, {getPeers}] = useContext(steamPumpContext)
 
   const ref: SteamGame = games[0]
   const localGame: SteamGame | undefined = games.filter((g) => g.peer && g.peer.name === "localhost").pop()
@@ -65,13 +65,13 @@ export function Game({games}: {games: SteamGame[]}): JSX.Element {
       </section>
       <section>
         <h3 style="padding-bottom: 0.5em;">Actions</h3>
-        <For each={(state.peers() || []).filter((p) => p.name !== "localhost")}>
+        <For each={getPeers().filter((p) => p.name !== "localhost")}>
           {(peer: Peer) => {
             const game: SteamGame | undefined = peer.getGame(ref.appID)
 
             if (game && game.stateFlags === 4) {
               return (
-                <a onClick={() => CopyGame(peer, game)}>Copy from {peer.name}</a>
+                <button onClick={() => CopyGame(peer, game)}>Copy from {peer.name}</button>
               )
             }
           }}

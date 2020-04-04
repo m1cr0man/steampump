@@ -1,8 +1,10 @@
-import { createContext, createEffect, createResource, createState, reconcile } from "solid-js"
+import { createContext, createEffect, createResource, createSignal, createState, onCleanup } from "solid-js"
 import { Context } from "solid-js/types/signal"
 import { Wrapped } from "solid-js/types/state"
 
 import { GetPeers, MultiPeerGame, Peer, SteamGame } from "./api"
+
+const HOME_PAGE: string = "games"
 
 function sortStrings(a: string, b: string): number {
   return (a < b) ? -1 : (a > b) ? 1 : 0
@@ -11,27 +13,33 @@ function sortStrings(a: string, b: string): number {
 export interface IStoreState {
     games: SteamGame[]
     gamesGrouped: SteamGame[][]
+    page(): string
     peers(): Peer[] | undefined
 }
 
 export interface IStoreMutators {
   getPeers(): Peer[]
+  isPage(page: string): boolean
 }
 
 export type IContext = [Wrapped<IStoreState>, IStoreMutators]
 
 export const steamPumpContext: Context<IContext> = createContext<IContext>([
-  { peers: () => [], games: [], gamesGrouped: [] },
+  { peers: () => [], page: () => "", games: [], gamesGrouped: [] },
   {
     getPeers(): Peer[] {
       return []
+    },
+    isPage(page: string): boolean {
+      return false
     },
   },
 ])
 
 export function SteamPumpProvider(props: {children: any}): JSX.Element {
     const [peers, loadPeers] = createResource<Peer[]>([])
-    const [state, setState] = createState<IStoreState>({ peers, games: [], gamesGrouped: [] })
+    const [page, setPage] = createSignal(HOME_PAGE)
+    const [state, setState] = createState<IStoreState>({ peers, page, games: [], gamesGrouped: [] })
     loadPeers((async () =>
       (await GetPeers()).sort((a, b) =>
         (a.name === "localhost") ? -1 : sortStrings(a.name, b.name),
@@ -41,6 +49,11 @@ export function SteamPumpProvider(props: {children: any}): JSX.Element {
     const mutators: IStoreMutators = {
       getPeers(): Peer[] {
         return state.peers() || []
+      },
+      isPage(qpage: string): boolean {
+        console.log(`${page()} ${qpage}`)
+
+        return page() === qpage
       },
     }
 
@@ -75,6 +88,11 @@ export function SteamPumpProvider(props: {children: any}): JSX.Element {
           new Map<SteamGame["appID"], SteamGame[]>()).values(),
       ))
     })
+
+    const onPageChange: (e: Event) => void = (_) => setPage(window.location.hash.slice(1))
+    // Add page change listener
+    window.addEventListener("hashchange", onPageChange)
+    onCleanup(() => window.removeEventListener("hashchange", onPageChange))
 
     const store: [Wrapped<IStoreState>, IStoreMutators] = [
         state,

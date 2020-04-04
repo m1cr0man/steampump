@@ -8,12 +8,12 @@ import { Game } from "../game"
 import "./style.css"
 
 export function Games(): JSX.Element {
-  const [state, {}] = useContext(steamPumpContext)
+  const [state, {getPeers}] = useContext(steamPumpContext)
 
   return (
     <section id="games">
       <h2>Available Games</h2>
-      <For each={state.gamesGrouped} fallback={<div>Loading data from {(state.peers() || []).length} peers</div>}>
+      <For each={state.gamesGrouped} fallback={<div>Loading data from {getPeers().length} peers</div>}>
         {(games: SteamGame[]) => <Game games={games} />}
       </For>
     </section>
