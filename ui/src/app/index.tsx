@@ -3,6 +3,7 @@ import { Match, Switch } from "solid-js/dom"
 
 import { steamPumpContext, SteamPumpProvider } from "../context"
 import { Games } from "../games"
+import { Settings } from "../settings"
 
 import "./style.css"
 
@@ -15,6 +16,9 @@ function Pages(): JSX.Element {
     <Switch>
       <Match when={muts.isPage("games")}>
         <Games />
+      </Match>
+      <Match when={muts.isPage("settings")}>
+        <Settings />
       </Match>
     </Switch>
   )

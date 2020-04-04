@@ -10,5 +10,5 @@ export function Settings(): JSX.Element {
       <h2>Settings</h2>
       <p>Coming soon tm</p>
     </section>
-  s
+  )
 }

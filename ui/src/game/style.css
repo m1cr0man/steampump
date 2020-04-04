@@ -1,3 +1,15 @@
+dt, dd {
+  display: inline-block;
+}
+
+dd {
+  margin-inline-start: 0.5em;
+}
+
+dt {
+  font-weight: bold;
+}
+
 .game {
   width: auto;
   margin: 1em 0;
@@ -37,3 +49,52 @@
   .game h3 {
     text-align: center;
   }
+
+.game-info, .game > figcaption {
+  flex-basis: 25%;
+}
+
+.game-peers {
+  flex-basis: 50%;
+}
+
+.peerpill {
+  display: inline-block;
+  border-radius: 3px;
+  padding: 0;
+  margin: 0.25em;
+}
+
+  .peerpill > figcaption {
+    font-weight: bold;
+  }
+
+  .peerpill > * {
+    display: inline-block;
+    padding: 0.125em 0.25em;
+  }
+
+  .peerpill > span {
+    padding: 0;
+  }
+
+.status-green {
+  background-color: green;
+}
+
+.status-grey {
+  background-color: gray;
+}
+
+.status-red {
+  background-color: maroon;
+}
+
+.status-orange {
+  background-color: darkorange;
+  color: black;
+}
+
+.clickable {
+  cursor: pointer;
+}

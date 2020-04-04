@@ -13,6 +13,7 @@ export function Games(): JSX.Element {
   return (
     <section id="games">
       <h2>Available Games</h2>
+      <aside>{state.games.length} games on {getPeers().length} peers</aside>
       <For each={state.gamesGrouped} fallback={<div>Loading data from {getPeers().length} peers</div>}>
         {(games: SteamGame[]) => <Game games={games} />}
       </For>

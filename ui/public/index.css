@@ -61,3 +61,7 @@ a:not(#logo):hover {
   background-color: darkolivegreen;
   border-color: darkolivegreen;
 }
+
+#root {
+  padding: 0 1em;
+}
