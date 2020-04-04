@@ -3,6 +3,8 @@ module github.com/m1cr0man/steampump
 go 1.14
 
 require (
+	github.com/Songmu/go-httpdate v1.0.0
+	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/oleiade/reflections v1.0.0 // indirect

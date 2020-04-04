@@ -58,6 +58,10 @@ func (i *API) GetGameManifestPath(appid int) string {
 	return path.Join(i.SteamAppsPath(), fmt.Sprintf("appmanifest_%d.acf", appid))
 }
 
+func (i *API) GetGameHeaderImagePath(appid int) string {
+	return path.Join(i.config.SteamPath, fmt.Sprintf("appcache/librarycache/%d_header.jpg", appid))
+}
+
 func (i *API) LoadManifest(filename string) (game Game, err error) {
 	// Get maps of ACF keys to fields, and fields to types
 	fields, _ := reflections.Fields(game)

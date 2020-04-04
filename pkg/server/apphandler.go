@@ -16,11 +16,11 @@ type AppHandler struct {
 func (h *AppHandler) RegisterRoutes(r *mux.Router, name string) {
 	name = "/" + strings.Trim(name, "/")
 	r.HandleFunc(name+"/config", h.GetConfig).
-		Name(name + "-config").
-		Methods(http.MethodGet)
+		Name(name+"-config").
+		Methods(http.MethodOptions, http.MethodGet)
 	r.HandleFunc(name+"/config", h.PutConfig).
-		Name(name + "-config-write").
-		Methods(http.MethodPut)
+		Name(name+"-config-write").
+		Methods(http.MethodOptions, http.MethodPut)
 }
 
 func (h *AppHandler) GetConfig(res http.ResponseWriter, req *http.Request) {
