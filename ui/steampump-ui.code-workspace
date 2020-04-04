@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"tslint.alwaysShowStatus": true,
+		"tslint.autoFixOnSave": true,
+		"editor.tabSize": 2
+	}
+}

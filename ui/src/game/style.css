@@ -1,0 +1,39 @@
+.game {
+  width: auto;
+  margin: 1em 0;
+  padding: 1em 0;
+  border-radius: 5px;
+  display: flex;
+  align-items: top;
+  justify-content: left;
+  background-color: #5a5a5a;
+}
+
+  .game > * {
+    min-height: 4em;
+    padding: 0 1em;
+    flex-basis: 100%;
+    border-right: 2px solid #2e2e2e;
+  }
+
+  .game > figcaption {
+    text-align: center;
+  }
+
+  .game > figcaption > img {
+    max-width: 100%;
+    max-height: 9em;
+  }
+
+  .game > *:last-child {
+    border-right: none;
+  }
+
+  .game h3, .game p {
+    margin-top: 0;
+    margin-bottom: 0.125em;
+  }
+
+  .game h3 {
+    text-align: center;
+  }
