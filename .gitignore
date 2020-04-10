@@ -4,3 +4,6 @@ config.go
 *.iml
 /bgur
 hidden/
+pkged.go
+rsrc.syso
+cmd/steampump/icon.go

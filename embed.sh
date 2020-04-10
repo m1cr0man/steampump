@@ -9,5 +9,7 @@ fi
 cat << EOF
 package $1
 
-const $2 = "$( (test "$3" = "--compress" && gzip -qc8 || cat) | base64 -w0 )"
+const $2 = (
+\`$( (test "$3" = "--compress" && gzip -qc8 || cat) | base64 -w0 )
+\`)
 EOF

@@ -97,10 +97,10 @@ func (h *MeshHandler) CopyGameFrom(res http.ResponseWriter, req *http.Request) {
 	}
 
 	copier := steammesh.GameCopier{
-		Status:  steammesh.StatusQueued,
-		AppID:   appID,
-		PeerURL: *peer.Url(),
-		Dest:    h.steam.GetGamePath(appID),
+		Status: steammesh.StatusQueued,
+		AppID:  appID,
+		Peer:   peer,
+		Dest:   h.steam.GetGamePath(appID),
 	}
 	go copier.StartCopy()
 	h.copiers = append(h.copiers, &copier)

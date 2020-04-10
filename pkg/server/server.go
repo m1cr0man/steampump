@@ -60,6 +60,7 @@ func NewServer(app *steampump.App, mesh *steammesh.API, steam *steam.API) *Serve
 	NewAppHandler(app).RegisterRoutes(r, "app")
 	NewMeshHandler(mesh, steam).RegisterRoutes(r, "mesh")
 	NewGameHandler(steam).RegisterRoutes(r, "games")
+	NewUIHandler().RegisterRoutes(r, "ui")
 	r.Use(CorsMiddleware)
 
 	s := Server{

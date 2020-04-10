@@ -1,7 +1,10 @@
 package steammesh
 
 import (
+	"net"
+	"net/http"
 	"net/http/httputil"
+	"time"
 )
 
 type API struct {
@@ -21,6 +24,11 @@ func (i *API) SetConfig(config Config) (err error) {
 			return err
 		}
 		peer.Proxy = httputil.NewSingleHostReverseProxy(url)
+		peer.Proxy.Transport = &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout: time.Second,
+			}).DialContext,
+		}
 		config.Peers[i] = peer
 	}
 

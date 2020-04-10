@@ -38,7 +38,7 @@ type GameCopier struct {
 	BytesDone  int64        `json:"bytes_done"`
 	BytesTotal int64        `json:"bytes_total"`
 	Files      int          `json:"files"`
-	PeerURL    url.URL      `json:"peer"`
+	Peer       Peer         `json:"peer"`
 	Dest       string       `json:"dest"`
 }
 
@@ -136,7 +136,7 @@ func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error
 	buf := make([]byte, IOBufferSize)
 	var readerr error
 	var n int = IOBufferSize
-	for n == IOBufferSize {
+	for {
 		n, readerr = res.Body.Read(buf)
 		// Skip checking readerr, it might just be EOF
 
@@ -147,7 +147,10 @@ func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error
 		}
 		g.BytesDone += int64(n)
 
-		if readerr != nil && readerr != io.EOF {
+		if readerr == io.EOF {
+			break
+		}
+		if readerr != nil {
 			return readerr
 		}
 	}
@@ -159,10 +162,10 @@ func (g *GameCopier) DownloadItem(remoteURL *url.URL, item *SyncItem) (err error
 // CopyGameFrom Start copying the game using the pre configured parameters
 func (g *GameCopier) CopyGameFrom() (err error) {
 	g.Status = StatusRunning
-	fmt.Printf("Starting copy: %d from %s to %s\n", g.AppID, g.PeerURL.String(), g.Dest)
+	fmt.Printf("Starting copy: %d from %s to %s\n", g.AppID, g.Peer.Url().String(), g.Dest)
 
 	relPath, _ := url.Parse(fmt.Sprintf("games/%d/content/", g.AppID))
-	remoteURL := g.PeerURL.ResolveReference(relPath)
+	remoteURL := g.Peer.Url().ResolveReference(relPath)
 
 	// Create an initial sync item for the root of the game
 	items := []*SyncItem{
@@ -231,8 +234,8 @@ func (g *GameCopier) StartCopy() {
 	copyLock.Unlock()
 
 	if err != nil {
-		fmt.Println("Copy ", g.AppID, " failed with error: ", err)
+		fmt.Println("Copy", g.AppID, "failed with error:", err)
 	} else {
-		fmt.Println("Copy ", g.AppID, " completed successfully")
+		fmt.Println("Copy", g.AppID, "completed successfully")
 	}
 }
