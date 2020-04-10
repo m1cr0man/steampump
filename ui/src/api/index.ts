@@ -1,2 +1,2 @@
-export { SteamGame, GameCopier, Peer, MultiPeerGame } from "./types"
+export { SteamGame, GameTransfer, Peer, MultiPeerGame } from "./types"
 export { GetPeers } from "./mesh"

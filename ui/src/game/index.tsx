@@ -8,6 +8,7 @@ import { Peer, SteamGame } from "../api/types"
 import { steamPumpContext } from "../context"
 
 import "./style.css"
+import { Transfer } from "./transfer"
 
 interface IGameStatus {
   colclass: string
@@ -44,7 +45,7 @@ function getGameStatus(game: SteamGame | undefined, games: SteamGame[]): IGameSt
   const needsUpdate: boolean = game.stateFlags !== 4
   const updating: boolean = needsUpdate && game.bytesDownloaded > 0
   const outOfDate: boolean = games.some((g) => +g.buildID > +game.buildID)
-  const progress: string = `${prettyBytes(game.bytesToDownload)} / ${prettyBytes(game.bytesDownloaded)}`
+  const progress: string = `${prettyBytes(game.bytesDownloaded)} / ${prettyBytes(game.bytesToDownload)}`
   let human: string = (outOfDate) ? "Update available" : (updating) ? "Updating" : (needsUpdate) ? "Update required" : "Up To Date"
   if (updating) { human += `, ${progress}` }
 
@@ -80,36 +81,41 @@ function PeerPill({peer, games}: {games: SteamGame[]; peer: Peer }): JSX.Element
 }
 
 export function Game({games}: {games: SteamGame[]}): JSX.Element {
-  const [_, {getPeers}] = useContext(steamPumpContext)
+  const [state, {getPeers}] = useContext(steamPumpContext)
 
   const ref: SteamGame = games[0]
   const localGame: SteamGame | undefined = games.filter((g) => g.peer && g.peer.name === "localhost").pop()
   const status: IGameStatus = getGameStatus(localGame, games)
 
   return (
-    <figure class="game">
-      <figcaption><HeaderImage games={games} /></figcaption>
-      <section class="game-info">
-        <h3>Game Info</h3>
-        <dl>
-          <dt>Name:</dt>
-          <dd>{ref.name}</dd><br />
-          <dt>AppID:</dt>
-          <dd>{ref.appID}</dd><br />
-          <dt>Size:</dt>
-          <dd>{prettyBytes(ref.sizeOnDisk)}</dd><br />
-          <dt>Status:</dt>
-          <dd>{status.human}</dd>
-        </dl>
-      </section>
-      <section class="game-peers">
-        <h3>Peers</h3>
-        <For each={getPeers().filter((p) => p.name !== "localhost")}>
-          {(peer: Peer) => (
-            <PeerPill peer={peer} games={games}/>
-          )}
-        </For>
-      </section>
-    </figure>
+    <div class="game">
+      <figure class="game-body">
+        <figcaption><HeaderImage games={games} /></figcaption>
+        <section class="game-info">
+          <h3>Game Info</h3>
+          <dl>
+            <dt>Name:</dt>
+            <dd>{ref.name}</dd><br />
+            <dt>AppID:</dt>
+            <dd>{ref.appID}</dd><br />
+            <dt>Size:</dt>
+            <dd>{prettyBytes(ref.sizeOnDisk)}</dd><br />
+            <dt>Status:</dt>
+            <dd>{status.human}</dd>
+          </dl>
+        </section>
+        <section class="game-peers">
+          <h3>Peers</h3>
+          <For each={getPeers().filter((p) => p.name !== "localhost")}>
+            {(peer: Peer) => (
+              <PeerPill peer={peer} games={games}/>
+            )}
+          </For>
+        </section>
+      </figure>
+      <For each={state.transfers.filter((t) => t.appID === ref.appID)}>
+        {(transfer) => <Transfer transfer={transfer} />}
+      </For>
+    </div>
   )
 }

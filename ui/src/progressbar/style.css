@@ -1,0 +1,40 @@
+@keyframes animate-stripes {
+  100% { background-position: 100% 0px; }
+}
+
+.progress-bar {
+  flex-basis: 100%;
+  height: 2em;
+  display: inline-block;
+  position: relative;
+  background-color: dimgray;
+}
+
+.progress-bar-remaining {
+  height: inherit;
+  position: absolute;
+  text-align: center;
+  z-index: 1;
+  background-image:
+    repeating-linear-gradient(-45deg,
+      transparent 0 15px, rgba(0, 0, 0, .1) 15px 30px),
+    -webkit-linear-gradient(top,
+                            rgba(255, 255, 255, .25),
+                            rgba(0, 0, 0, .25));
+                            animation: animate-stripes 2s linear infinite;
+}
+
+.progress-bar-animated {
+  animation: animate-stripes 2s linear infinite;
+}
+
+.progress-bar-text {
+  width: 100%;
+  height: inherit;
+  position: absolute;
+  display: inline-block;
+  text-align: center;
+  font-size: 1.25em;
+  font-weight: bold;
+  z-index: 3;
+}

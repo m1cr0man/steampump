@@ -11,8 +11,32 @@ dt {
 }
 
 .game {
-  width: auto;
   margin: 1em 0;
+}
+
+.game-transfer {
+  background-color: gray;
+  margin: 0 3em;
+  padding: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.game-transfer:last-child {
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.game-transfer-info {
+  flex-basis: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 1.25em;
+  font-weight: bold;
+}
+
+.game-body {
+  margin: 0;
   padding: 1em 0;
   border-radius: 5px;
   display: flex;
@@ -21,36 +45,36 @@ dt {
   background-color: #5a5a5a;
 }
 
-  .game > * {
+  .game-body > * {
     min-height: 4em;
     padding: 0 1em;
     flex-basis: 100%;
     border-right: 2px solid #2e2e2e;
   }
 
-  .game > figcaption {
+  .game-body > figcaption {
     text-align: center;
   }
 
-  .game > figcaption > img {
+  .game-body > figcaption > img {
     max-width: 100%;
     max-height: 9em;
   }
 
-  .game > *:last-child {
+  .game-body > *:last-child {
     border-right: none;
   }
 
-  .game h3, .game p {
+  .game-body h3, .game-body p {
     margin-top: 0;
     margin-bottom: 0.125em;
   }
 
-  .game h3 {
+  .game-body h3 {
     text-align: center;
   }
 
-.game-info, .game > figcaption {
+.game-info, .game-body > figcaption {
   flex-basis: 25%;
 }
 
