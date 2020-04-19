@@ -62,6 +62,23 @@ func (i *API) GetGameHeaderImagePath(appid int) string {
 	return path.Join(i.config.SteamPath, fmt.Sprintf("appcache/librarycache/%d_header.jpg", appid))
 }
 
+func (i *API) DeleteDownloadData(appid int) {
+	downloadPath := path.Join(i.SteamAppsPath(), "downloading", fmt.Sprintf("%d", appid))
+
+	// Don't care about errors
+	_ = os.RemoveAll(downloadPath)
+
+	files, err := ioutil.ReadDir(path.Join(i.SteamAppsPath(), "downloading"))
+	stateFilePrefix := fmt.Sprintf("state_%d", appid)
+	if err == nil {
+		for _, file := range files {
+			if strings.Contains(file.Name(), stateFilePrefix) {
+				_ = os.Remove(path.Join(i.SteamAppsPath(), "downloading", file.Name()))
+			}
+		}
+	}
+}
+
 func (i *API) LoadManifest(filename string) (game Game, err error) {
 	// Get maps of ACF keys to fields, and fields to types
 	fields, _ := reflections.Fields(game)

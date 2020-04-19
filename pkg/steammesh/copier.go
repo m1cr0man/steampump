@@ -244,6 +244,7 @@ func (g *GameCopier) StartCopy() {
 		fmt.Println("Copy manifest of", g.AppID, "failed with error:", err)
 		g.Status = StatusFailed
 	} else {
+		g.Steam.DeleteDownloadData(g.AppID)
 		fmt.Println("Copy", g.AppID, "completed successfully")
 		g.Status = StatusSuccessful
 	}

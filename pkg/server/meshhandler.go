@@ -71,7 +71,7 @@ func (h *MeshHandler) CopyGameFrom(res http.ResponseWriter, req *http.Request) {
 
 	// Load manifest from remote system
 	relURL, _ := url.Parse(fmt.Sprintf("games/%d/manifest", appID))
-	_, err := client.Get(peer.Url().ResolveReference(relURL).String())
+	_, err = client.Get(peer.Url().ResolveReference(relURL).String())
 	if err != nil {
 		http.Error(res, "Invalid appID specified", http.StatusBadRequest)
 		return
