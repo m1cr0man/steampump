@@ -209,8 +209,8 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 	return
 }
 
-func (g *GameCopier) CopyManifestFrom() (err error) {
-	relURL, _ := url.Parse(fmt.Sprintf("games/%d/manifest", g.AppID))
+func (g *GameCopier) genericCopy(src, dest string) (err error) {
+	relURL, _ := url.Parse(src)
 	mfstres, err := http.Get(g.Peer.Url().ResolveReference(relURL).String())
 	if err != nil {
 		return
@@ -219,12 +219,25 @@ func (g *GameCopier) CopyManifestFrom() (err error) {
 	if err != nil {
 		return
 	}
-	err = ioutil.WriteFile(g.Steam.GetGameManifestPath(g.AppID), data, 0644)
+	err = ioutil.WriteFile(dest, data, 0644)
 	if err != nil {
 		return
 	}
 	err = g.Steam.LoadGames()
 	return
+}
+
+func (g *GameCopier) CopyManifestFrom() (err error) {
+	err = g.genericCopy(fmt.Sprintf("games/%d/manifest", g.AppID), g.Steam.GetGameManifestPath(g.AppID))
+	if err != nil {
+		return
+	}
+	err = g.Steam.LoadGames()
+	return
+}
+
+func (g *GameCopier) CopyHeaderImageFrom() error {
+	return g.genericCopy(fmt.Sprintf("games/%d/images/header", g.AppID), g.Steam.GetGameHeaderImagePath(g.AppID))
 }
 
 // StartCopy wait for locks and start copying the game
@@ -244,6 +257,8 @@ func (g *GameCopier) StartCopy() {
 		fmt.Println("Copy manifest of", g.AppID, "failed with error:", err)
 		g.Status = StatusFailed
 	} else {
+		// Don't really care if the header image fails
+		_ = g.CopyHeaderImageFrom()
 		g.Steam.DeleteDownloadData(g.AppID)
 		fmt.Println("Copy", g.AppID, "completed successfully")
 		g.Status = StatusSuccessful
