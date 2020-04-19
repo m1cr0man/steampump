@@ -12,15 +12,15 @@ type Config struct {
 	Mesh  steammesh.Config `json:"mesh"`
 }
 
-type Status int
+type TaskStatus int
 
 const (
-	StatusQueued Status = iota
-	StatusRunning
-	StatusDone
+	TaskStatusQueued TaskStatus = iota
+	TaskStatusRunning
+	TaskStatusDone
 )
 
-func (s Status) String() string {
+func (s TaskStatus) String() string {
 	return [3]string{"Queued", "Running", "Done"}[s]
 }
 
@@ -28,7 +28,7 @@ type Task struct {
 	Title    string
 	Info     string
 	Progress string
-	Status   Status
+	Status   TaskStatus
 	Gate     sync.Cond
 }
 

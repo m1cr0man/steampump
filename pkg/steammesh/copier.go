@@ -11,25 +11,11 @@ import (
 	"path"
 	"sync"
 	"time"
+
+	"github.com/m1cr0man/steampump/pkg/steam"
 )
 
 var copyLock sync.Mutex = sync.Mutex{}
-
-// CopierStatus Indicates the status of a GameCopier operation
-type CopierStatus string
-
-const (
-	// StatusQueued Copy is queued to run when possible
-	StatusQueued CopierStatus = "Queued"
-	// StatusRunning Copy is running
-	StatusRunning = "Running"
-	// StatusCalculating Copy is running but is still counting files which must be copied
-	StatusCalculating = "Calculating"
-	// StatusSuccessful Copy has finished and completed successfully
-	StatusSuccessful = "Successful"
-	// StatusFailed Copy has finished and failed
-	StatusFailed = "Failed"
-)
 
 // GameCopier operation. Copies games between a peer and the local host
 type GameCopier struct {
@@ -40,6 +26,7 @@ type GameCopier struct {
 	Files      int          `json:"files"`
 	Peer       Peer         `json:"peer"`
 	Dest       string       `json:"dest"`
+	Steam      *steam.API
 }
 
 func (g *GameCopier) getPaths(remoteURL *url.URL, item *SyncItem) (string, *url.URL) {
@@ -195,7 +182,6 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 			// Directory? create it and sync
 			if item.Mode.IsDir() {
 				if err = os.MkdirAll(localPath, item.Mode); err != nil {
-					g.Status = StatusFailed
 					return
 				}
 				newItems, err = g.DiffDirectory(remoteURL, item)
@@ -207,7 +193,6 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 			}
 
 			if err != nil {
-				g.Status = StatusFailed
 				return
 			}
 			err = os.Chtimes(localPath, item.Mtime, item.Mtime)
@@ -217,12 +202,28 @@ func (g *GameCopier) CopyGameFrom() (err error) {
 		}
 
 		if err != nil {
-			g.Status = StatusFailed
 			return
 		}
 	}
 
-	g.Status = StatusSuccessful
+	return
+}
+
+func (g *GameCopier) CopyManifestFrom() (err error) {
+	relURL, _ := url.Parse(fmt.Sprintf("games/%d/manifest", g.AppID))
+	mfstres, err := http.Get(g.Peer.Url().ResolveReference(relURL).String())
+	if err != nil {
+		return
+	}
+	data, err := ioutil.ReadAll(mfstres.Body)
+	if err != nil {
+		return
+	}
+	err = ioutil.WriteFile(g.Steam.GetGameManifestPath(g.AppID), data, 0644)
+	if err != nil {
+		return
+	}
+	err = g.Steam.LoadGames()
 	return
 }
 
@@ -235,7 +236,15 @@ func (g *GameCopier) StartCopy() {
 
 	if err != nil {
 		fmt.Println("Copy", g.AppID, "failed with error:", err)
+		g.Status = StatusFailed
+	}
+
+	err = g.CopyManifestFrom()
+	if err != nil {
+		fmt.Println("Copy manifest of", g.AppID, "failed with error:", err)
+		g.Status = StatusFailed
 	} else {
 		fmt.Println("Copy", g.AppID, "completed successfully")
+		g.Status = StatusSuccessful
 	}
 }

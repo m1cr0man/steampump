@@ -50,3 +50,19 @@ type SyncItem struct {
 	TransferItem
 	Action Action `json="action"`
 }
+
+// CopierStatus Indicates the status of a GameCopier operation
+type CopierStatus string
+
+const (
+	// StatusQueued Copy is queued to run when possible
+	StatusQueued CopierStatus = "Queued"
+	// StatusRunning Copy is running
+	StatusRunning = "Running"
+	// StatusCalculating Copy is running but is still counting files which must be copied
+	StatusCalculating = "Calculating"
+	// StatusSuccessful Copy has finished and completed successfully
+	StatusSuccessful = "Successful"
+	// StatusFailed Copy has finished and failed
+	StatusFailed = "Failed"
+)

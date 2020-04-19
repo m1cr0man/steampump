@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -72,27 +71,9 @@ func (h *MeshHandler) CopyGameFrom(res http.ResponseWriter, req *http.Request) {
 
 	// Load manifest from remote system
 	relURL, _ := url.Parse(fmt.Sprintf("games/%d/manifest", appID))
-	mfstres, err := client.Get(peer.Url().ResolveReference(relURL).String())
+	_, err := client.Get(peer.Url().ResolveReference(relURL).String())
 	if err != nil {
 		http.Error(res, "Invalid appID specified", http.StatusBadRequest)
-		return
-	}
-	data, err := ioutil.ReadAll(mfstres.Body)
-	if err != nil {
-		fmt.Printf(err.Error())
-		http.Error(res, "Failed to download manifest", http.StatusInternalServerError)
-		return
-	}
-	err = ioutil.WriteFile(h.steam.GetGameManifestPath(appID), data, 0644)
-	if err != nil {
-		fmt.Printf(err.Error())
-		http.Error(res, "Failed to write manifest", http.StatusInternalServerError)
-		return
-	}
-	err = h.steam.LoadGames()
-	if err != nil {
-		fmt.Printf(err.Error())
-		http.Error(res, "Failed to reload steam games", http.StatusInternalServerError)
 		return
 	}
 
@@ -101,6 +82,7 @@ func (h *MeshHandler) CopyGameFrom(res http.ResponseWriter, req *http.Request) {
 		AppID:  appID,
 		Peer:   peer,
 		Dest:   h.steam.GetGamePath(appID),
+		Steam:  h.steam,
 	}
 	go copier.StartCopy()
 	h.copiers = append(h.copiers, &copier)
